@@ -9,10 +9,8 @@ require 'awesome_nested_set/iterator'
 module CollectiveIdea #:nodoc:
   module Acts #:nodoc:
     module NestedSet #:nodoc:
-
       module Model
         extend ActiveSupport::Concern
-
         included do
           delegate :quoted_table_name, :arel_table, :to => self
           extend Validatable
@@ -145,7 +143,12 @@ module CollectiveIdea #:nodoc:
             end
           end
 
-          self.class.base_class.nested_set_scope options
+          #self.class.base_class.nested_set_scope options
+          
+           options = {:order => quoted_order_column_full_name}.merge(options)
+           self.class.base_class.where(options[:conditions]).order(options.delete(:order))
+          
+          
         end
 
         def to_text
@@ -171,9 +174,15 @@ module CollectiveIdea #:nodoc:
         end
 
         def right_most_node
-          @right_most_node ||= self.class.base_class.unscoped.nested_set_scope(
-            :order => "#{quoted_right_column_full_name} desc"
-          ).first
+          
+            options = {:order => quoted_order_column_full_name}.merge( :order => "#{quoted_right_column_full_name} desc")
+            @right_most_node ||= self.class.base_class.unscoped.where(options[:conditions]).order(options.delete(:order)).first
+            
+            
+           
+       #   @right_most_node ||= self.class.base_class.unscoped.nested_set_scope(
+       #     :order => "#{quoted_right_column_full_name} desc"
+       #   ).first
         end
 
         def right_most_bound
